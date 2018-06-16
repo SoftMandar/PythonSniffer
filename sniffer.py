@@ -2,7 +2,7 @@ import sys
 import socket
 import struct
 
-from packets import Ethernet
+from packets import *
 
 class Sniffer:
 
@@ -16,9 +16,15 @@ class Sniffer:
 
 		}
 
+
 		try:
-			self.sniffer_socket = socket.socket(socket.AF_PACKET, socket.SOCK_RAW,
-						socket.ntohs(0x0003))
+			if all_proto:
+				self.sniffer_socket = socket.socket(socket.AF_PACKET,
+										socket.SOCK_RAW,socket.ntohs(0x0003))
+			else:
+				if proto:
+					self.sniffer_socket = socket.socket(socket.AF_INET,
+											socket.SOCK_RAW, protocols[proto])
 		except socket.error as msg:
 			print(msg)
 			sys.exit(0)
@@ -30,8 +36,8 @@ class Sniffer:
 			while True:
 
 				data = self.sniffer_socket.recvfrom(65565)
-
 				packet = data[0]
+
 				self.process_packet(packet)
 
 		except KeyboardInterrupt:
@@ -40,7 +46,9 @@ class Sniffer:
 
 	def process_packet(self, packet):
 
-		eth_pack = Ethernet(packet[0:14])
+
+		eth_pack = IP(packet[0:20])
+		eth_pack.upper_protocol(packet)
 		print(eth_pack)
 
 
